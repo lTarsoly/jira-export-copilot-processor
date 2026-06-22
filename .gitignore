@@ -2,3 +2,4 @@ _backup/
 *.csv
 bin/
 obj/
+*.exe
