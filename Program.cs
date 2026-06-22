@@ -46,7 +46,7 @@ Console.WriteLine($"Using model : {modelName}");
 
 var openAIClient = new OpenAIClient(
     new ApiKeyCredential(token),
-    new OpenAIClientOptions { Endpoint = new Uri("https://models.inference.ai.azure.com") });
+    new OpenAIClientOptions { Endpoint = new Uri("https://models.github.ai/inference") });
 
 IChatClient chatClient = openAIClient
     .GetChatClient(modelName)
