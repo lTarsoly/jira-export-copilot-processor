@@ -68,7 +68,15 @@ if (Test-Path -Path $exePath -PathType Leaf) {
         Remove-Item -Path $zipPath -Force
     }
 
-    Compress-Archive -Path (Join-Path -Path $outputDir -ChildPath "*") -DestinationPath $zipPath -CompressionLevel Optimal
+    $filesToArchive = Get-ChildItem -Path $outputDir -Recurse -File |
+        Where-Object { $_.Extension -ne ".csv" } |
+        ForEach-Object { $_.FullName }
+
+    if ($filesToArchive.Count -eq 0) {
+        throw "No files available to archive after excluding CSV files."
+    }
+
+    Compress-Archive -LiteralPath $filesToArchive -DestinationPath $zipPath -CompressionLevel Optimal
     Write-Host "Archive   : $zipPath"
 } else {
     Write-Host "Publish finished, but executable was not found at expected path:" -ForegroundColor Yellow
