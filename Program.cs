@@ -46,14 +46,20 @@ if (string.IsNullOrEmpty(token))
 var modelName = Environment.GetEnvironmentVariable("COPILOT_MODEL") ?? "gpt-4o";
 Console.WriteLine($"Using model : {modelName}");
 
-var proxyHandler = new HttpClientHandler
-{
-    UseProxy = true,
-    DefaultProxyCredentials = CredentialCache.DefaultNetworkCredentials
-};
+var proxyHandler = new HttpClientHandler { UseProxy = true };
 var proxyUrl = Environment.GetEnvironmentVariable("HTTPS_PROXY") ?? Environment.GetEnvironmentVariable("HTTP_PROXY");
 if (!string.IsNullOrEmpty(proxyUrl))
+{
     proxyHandler.Proxy = new WebProxy(proxyUrl) { Credentials = CredentialCache.DefaultNetworkCredentials };
+}
+else
+{
+    // Explicitly adopt the OS/IE system proxy and inject current-user credentials
+    // (avoids DNS failures on corporate networks where direct resolution is blocked)
+    var systemProxy = WebRequest.GetSystemWebProxy();
+    systemProxy.Credentials = CredentialCache.DefaultNetworkCredentials;
+    proxyHandler.Proxy = systemProxy;
+}
 
 var openAIClient = new OpenAIClient(
     new ApiKeyCredential(token),
