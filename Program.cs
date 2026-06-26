@@ -1,4 +1,6 @@
 ﻿using System.ClientModel;
+using System.ClientModel.Primitives;
+using System.Net;
 using System.Text;
 using Microsoft.Extensions.AI;
 using OpenAI;
@@ -44,9 +46,22 @@ if (string.IsNullOrEmpty(token))
 var modelName = Environment.GetEnvironmentVariable("COPILOT_MODEL") ?? "gpt-4o";
 Console.WriteLine($"Using model : {modelName}");
 
+var proxyHandler = new HttpClientHandler
+{
+    UseProxy = true,
+    DefaultProxyCredentials = CredentialCache.DefaultNetworkCredentials
+};
+var proxyUrl = Environment.GetEnvironmentVariable("HTTPS_PROXY") ?? Environment.GetEnvironmentVariable("HTTP_PROXY");
+if (!string.IsNullOrEmpty(proxyUrl))
+    proxyHandler.Proxy = new WebProxy(proxyUrl) { Credentials = CredentialCache.DefaultNetworkCredentials };
+
 var openAIClient = new OpenAIClient(
     new ApiKeyCredential(token),
-    new OpenAIClientOptions { Endpoint = new Uri("https://models.github.ai/inference") });
+    new OpenAIClientOptions
+    {
+        Endpoint = new Uri("https://models.github.ai/inference"),
+        Transport = new HttpClientPipelineTransport(new HttpClient(proxyHandler))
+    });
 
 IChatClient chatClient = openAIClient
     .GetChatClient(modelName)
